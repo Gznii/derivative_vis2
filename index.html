@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph of f(x) = x² + 10</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        #controls { margin-bottom: 20px; }
+        #label { font-weight: bold; }
+        canvas { border: 1px solid #333; }
+    </style>
+</head>
+<body>
+    <h1>Graph of f(x) = x² + 10</h1>
+    <div id="controls">
+        <label for="x0">x₀: </label>
+        <input type="range" id="x0" min="-10" max="10" step="0.1" value="0">
+        <span id="label"></span>
+    </div>
+    <canvas id="graph" width="600" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('graph');
+        const ctx = canvas.getContext('2d');
+        const x0Slider = document.getElementById('x0');
+        const label = document.getElementById('label');
+
+        // Graph settings
+        const width = canvas.width;
+        const height = canvas.height;
+        const xMin = -10, xMax = 10;
+        const yMin = -10, yMax = 120;
+
+        function f(x) {
+            return x * x + 10;
+        }
+
+        function toCanvasX(x) {
+            return ((x - xMin) / (xMax - xMin)) * width;
+        }
+        function toCanvasY(y) {
+            return height - ((y - yMin) / (yMax - yMin)) * height;
+        }
+
+        function drawGraph(x0) {
+            ctx.clearRect(0, 0, width, height);
+            // Draw axes
+            ctx.strokeStyle = '#888';
+            ctx.beginPath();
+            ctx.moveTo(toCanvasX(xMin), toCanvasY(0));
+            ctx.lineTo(toCanvasX(xMax), toCanvasY(0));
+            ctx.moveTo(toCanvasX(0), toCanvasY(yMin));
+            ctx.lineTo(toCanvasX(0), toCanvasY(yMax));
+            ctx.stroke();
+
+            // Draw function
+            ctx.strokeStyle = '#0074D9';
+            ctx.beginPath();
+            for (let x = xMin; x <= xMax; x += 0.05) {
+                const y = f(x);
+                if (x === xMin) {
+                    ctx.moveTo(toCanvasX(x), toCanvasY(y));
+                } else {
+                    ctx.lineTo(toCanvasX(x), toCanvasY(y));
+                }
+            }
+            ctx.stroke();
+
+            // Draw point
+            const y0 = f(x0);
+            ctx.fillStyle = '#FF4136';
+            ctx.beginPath();
+            ctx.arc(toCanvasX(x0), toCanvasY(y0), 6, 0, 2 * Math.PI);
+            ctx.fill();
+            // Draw label
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#111';
+            ctx.fillText(`(${x0.toFixed(2)}, ${y0.toFixed(2)})`, toCanvasX(x0) + 10, toCanvasY(y0) - 10);
+            label.textContent = `(${x0.toFixed(2)}, ${y0.toFixed(2)})`;
+        }
+
+        x0Slider.addEventListener('input', () => {
+            drawGraph(parseFloat(x0Slider.value));
+        });
+
+        // Initial draw
+        drawGraph(parseFloat(x0Slider.value));
+    </script>
+</body>
+</html>
