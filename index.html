@@ -17,13 +17,19 @@
         <label for="x0">x₀: </label>
         <input type="range" id="x0" min="-10" max="10" step="0.1" value="0">
         <span id="label"></span>
+        <span id="slope" style="margin-left:20px;"></span>
     </div>
     <canvas id="graph" width="600" height="400"></canvas>
+    <h2>Graph of f'(x) = 2x</h2>
+    <canvas id="derivative" width="600" height="200"></canvas>
     <script>
         const canvas = document.getElementById('graph');
         const ctx = canvas.getContext('2d');
         const x0Slider = document.getElementById('x0');
         const label = document.getElementById('label');
+        const slopeLabel = document.getElementById('slope');
+        const derivativeCanvas = document.getElementById('derivative');
+        const dctx = derivativeCanvas.getContext('2d');
 
         // Graph settings
         const width = canvas.width;
@@ -31,8 +37,16 @@
         const xMin = -10, xMax = 10;
         const yMin = -10, yMax = 120;
 
+        // Derivative graph settings
+        const dWidth = derivativeCanvas.width;
+        const dHeight = derivativeCanvas.height;
+        const dyMin = -20, dyMax = 20;
+
         function f(x) {
             return x * x + 10;
+        }
+        function df(x) {
+            return 2 * x;
         }
 
         function toCanvasX(x) {
@@ -40,6 +54,12 @@
         }
         function toCanvasY(y) {
             return height - ((y - yMin) / (yMax - yMin)) * height;
+        }
+        function toDerivativeCanvasX(x) {
+            return ((x - xMin) / (xMax - xMin)) * dWidth;
+        }
+        function toDerivativeCanvasY(y) {
+            return dHeight - ((y - dyMin) / (dyMax - dyMin)) * dHeight;
         }
 
         function drawGraph(x0) {
@@ -66,8 +86,25 @@
             }
             ctx.stroke();
 
-            // Draw point
+            // Draw tangent line (slope)
             const y0 = f(x0);
+            const slope = df(x0);
+            // y = slope * (x - x0) + y0
+            const tangentX1 = x0 - 3;
+            const tangentX2 = x0 + 3;
+            const tangentY1 = slope * (tangentX1 - x0) + y0;
+            const tangentY2 = slope * (tangentX2 - x0) + y0;
+            ctx.save();
+            ctx.setLineDash([8, 6]);
+            ctx.strokeStyle = 'green';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(toCanvasX(tangentX1), toCanvasY(tangentY1));
+            ctx.lineTo(toCanvasX(tangentX2), toCanvasY(tangentY2));
+            ctx.stroke();
+            ctx.restore();
+
+            // Draw point
             ctx.fillStyle = '#FF4136';
             ctx.beginPath();
             ctx.arc(toCanvasX(x0), toCanvasY(y0), 6, 0, 2 * Math.PI);
@@ -77,6 +114,33 @@
             ctx.fillStyle = '#111';
             ctx.fillText(`(${x0.toFixed(2)}, ${y0.toFixed(2)})`, toCanvasX(x0) + 10, toCanvasY(y0) - 10);
             label.textContent = `(${x0.toFixed(2)}, ${y0.toFixed(2)})`;
+            slopeLabel.textContent = `Slope: ${slope.toFixed(2)}`;
+        }
+
+        function drawDerivative() {
+            dctx.clearRect(0, 0, dWidth, dHeight);
+            // Draw axes
+            dctx.strokeStyle = '#888';
+            dctx.beginPath();
+            dctx.moveTo(toDerivativeCanvasX(xMin), toDerivativeCanvasY(0));
+            dctx.lineTo(toDerivativeCanvasX(xMax), toDerivativeCanvasY(0));
+            dctx.moveTo(toDerivativeCanvasX(0), toDerivativeCanvasY(dyMin));
+            dctx.lineTo(toDerivativeCanvasX(0), toDerivativeCanvasY(dyMax));
+            dctx.stroke();
+
+            // Draw derivative function
+            dctx.strokeStyle = '#2ECC40';
+            dctx.lineWidth = 2;
+            dctx.beginPath();
+            for (let x = xMin; x <= xMax; x += 0.05) {
+                const y = df(x);
+                if (x === xMin) {
+                    dctx.moveTo(toDerivativeCanvasX(x), toDerivativeCanvasY(y));
+                } else {
+                    dctx.lineTo(toDerivativeCanvasX(x), toDerivativeCanvasY(y));
+                }
+            }
+            dctx.stroke();
         }
 
         x0Slider.addEventListener('input', () => {
@@ -85,6 +149,7 @@
 
         // Initial draw
         drawGraph(parseFloat(x0Slider.value));
+        drawDerivative();
     </script>
 </body>
 </html>
